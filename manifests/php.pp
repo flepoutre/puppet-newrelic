@@ -4,17 +4,54 @@
 #
 # Parameters:
 #
-# [*newrelic_php_package_ensure*]
-#   Specific the Newrelic PHP package update state. Defaults to 'present'. Possible value is 'latest'.
-#
-# [*newrelic_php_service_ensure*]
-#   Specify the Newrelic PHP service running state. Defaults to 'running'. Possible value is 'stopped'.
-#
-# [*newrelic_php_service_enable*]
-#   Specify the Newrelic PHP service startup state. Defaults to true. Possible value is false.
-#
-# [*newrelic_daemon_cfgfile_ensure*]
-#   Specify the Newrelic daemon cfg file state. Change to absent for agent startup mode. Defaults to 'present'. Possible value is 'absent'.
+# @param newrelic_php_package_ensure
+# @param newrelic_php_service_ensure
+# @param newrelic_php_conf_dir
+# @param newrelic_license_key
+# @param newrelic_ini_appname
+# @param newrelic_ini_browser_monitoring_auto_instrument
+# @param newrelic_ini_enabled
+# @param newrelic_ini_error_collector_enabled
+# @param newrelic_ini_error_collector_prioritize_api_errors
+# @param newrelic_ini_error_collector_record_database_errors
+# @param newrelic_ini_framework
+# @param newrelic_ini_high_security
+# @param newrelic_ini_logfile
+# @param newrelic_ini_loglevel
+# @param newrelic_ini_transaction_tracer_custom
+# @param newrelic_ini_transaction_tracer_detail
+# @param newrelic_ini_transaction_tracer_enabled
+# @param newrelic_ini_transaction_tracer_explain_enabled
+# @param newrelic_ini_transaction_tracer_explain_threshold
+# @param newrelic_ini_transaction_tracer_record_sql
+# @param newrelic_ini_transaction_tracer_slow_sql
+# @param newrelic_ini_transaction_tracer_stack_trace_threshold
+# @param newrelic_ini_transaction_tracer_threshold
+# @param newrelic_ini_capture_params
+# @param newrelic_ini_ignored_params
+# @param newrelic_daemon_cfgfile_ensure
+# @param newrelic_daemon_dont_launch
+# @param newrelic_daemon_pidfile
+# @param newrelic_daemon_location
+# @param newrelic_daemon_logfile
+# @param newrelic_daemon_loglevel
+# @param newrelic_daemon_port
+# @param newrelic_daemon_ssl
+# @param newrelic_daemon_ssl_ca_bundle
+# @param newrelic_daemon_ssl_ca_path
+# @param newrelic_daemon_proxy
+# @param newrelic_daemon_collector_host
+# @param newrelic_daemon_auditlog
+# @param newrelic_php_conf_appname
+# @param newrelic_php_conf_enabled
+# @param newrelic_php_conf_transaction
+# @param newrelic_php_conf_logfile
+# @param newrelic_php_conf_loglevel
+# @param newrelic_php_conf_browser
+# @param newrelic_php_conf_dberrors
+# @param newrelic_php_conf_transactionrecordsql
+# @param newrelic_php_conf_captureparams
+# @param newrelic_php_conf_ignoredparams
 #
 # Actions:
 #
@@ -35,61 +72,56 @@
 # For detailed explanation about the parameters below see: https://docs.newrelic.com/docs/php/php-agent-phpini-settings
 #
 define newrelic::php (
-  $newrelic_php_package_ensure                           = 'present',
-  $newrelic_php_service_ensure                           = 'running',
-  $newrelic_php_service_enable                           = true,
-  $newrelic_php_conf_dir                                 = $newrelic::params::newrelic_php_conf_dir,
-  $newrelic_license_key                                  = undef,
-  $newrelic_ini_appname                                  = undef,
-  $newrelic_ini_browser_monitoring_auto_instrument       = undef,
-  $newrelic_ini_enabled                                  = undef,
-  $newrelic_ini_error_collector_enabled                  = undef,
-  $newrelic_ini_error_collector_prioritize_api_errors    = undef,
-  $newrelic_ini_error_collector_record_database_errors   = undef,
-  $newrelic_ini_framework                                = undef,
-  $newrelic_ini_high_security                            = undef,
-  $newrelic_ini_logfile                                  = undef,
-  $newrelic_ini_loglevel                                 = undef,
-  $newrelic_ini_transaction_tracer_custom                = undef,
-  $newrelic_ini_transaction_tracer_detail                = undef,
-  $newrelic_ini_transaction_tracer_enabled               = undef,
-  $newrelic_ini_transaction_tracer_explain_enabled       = undef,
-  $newrelic_ini_transaction_tracer_explain_threshold     = undef,
-  $newrelic_ini_transaction_tracer_record_sql            = undef,
-  $newrelic_ini_transaction_tracer_slow_sql              = undef,
-  $newrelic_ini_transaction_tracer_stack_trace_threshold = undef,
-  $newrelic_ini_transaction_tracer_threshold             = undef,
-  $newrelic_ini_capture_params                           = undef,
-  $newrelic_ini_ignored_params                           = undef,
-  $newrelic_daemon_cfgfile_ensure                        = 'present',
-  $newrelic_daemon_dont_launch                           = undef,
-  $newrelic_daemon_pidfile                               = undef,
-  $newrelic_daemon_location                              = undef,
-  $newrelic_daemon_logfile                               = undef,
-  $newrelic_daemon_loglevel                              = undef,
-  $newrelic_daemon_port                                  = undef,
-  $newrelic_daemon_ssl                                   = undef,
-  $newrelic_daemon_ssl_ca_bundle                         = undef,
-  $newrelic_daemon_ssl_ca_path                           = undef,
-  $newrelic_daemon_proxy                                 = undef,
-  $newrelic_daemon_collector_host                        = undef,
-  $newrelic_daemon_auditlog                              = undef,
-  ### Deprecated below
-  $newrelic_php_conf_appname              = undef,
-  $newrelic_php_conf_enabled              = undef,
-  $newrelic_php_conf_transaction          = undef,
-  $newrelic_php_conf_logfile              = undef,
-  $newrelic_php_conf_loglevel             = undef,
-  $newrelic_php_conf_browser              = undef,
-  $newrelic_php_conf_dberrors             = undef,
-  $newrelic_php_conf_transactionrecordsql = undef,
-  $newrelic_php_conf_captureparams        = undef,
-  $newrelic_php_conf_ignoredparams        = undef,
+  String $newrelic_php_package_ensure                                     = 'present',
+  String $newrelic_php_service_ensure                                     = 'running',
+  Variant[String, Array] $newrelic_php_conf_dir                           = $newrelic::params::newrelic_php_conf_dir,
+  Optional[String] $newrelic_license_key                                  = undef,
+  Optional[String] $newrelic_ini_appname                                  = undef,
+  Optional[Boolean] $newrelic_ini_browser_monitoring_auto_instrument      = undef,
+  Optional[Boolean] $newrelic_ini_enabled                                 = undef,
+  Optional[Boolean] $newrelic_ini_error_collector_enabled                 = undef,
+  Optional[Boolean] $newrelic_ini_error_collector_prioritize_api_errors   = undef,
+  Optional[Boolean] $newrelic_ini_error_collector_record_database_errors  = undef,
+  Optional[String] $newrelic_ini_framework                                = undef,
+  Optional[Boolean] $newrelic_ini_high_security                           = undef,
+  Optional[String] $newrelic_ini_logfile                                  = undef,
+  Optional[String] $newrelic_ini_loglevel                                 = undef,
+  Optional[String] $newrelic_ini_transaction_tracer_custom                = undef,
+  Optional[Integer] $newrelic_ini_transaction_tracer_detail               = undef,
+  Optional[Boolean] $newrelic_ini_transaction_tracer_enabled              = undef,
+  Optional[Boolean] $newrelic_ini_transaction_tracer_explain_enabled      = undef,
+  Optional[String] $newrelic_ini_transaction_tracer_explain_threshold     = undef,
+  Optional[String] $newrelic_ini_transaction_tracer_record_sql            = undef,
+  Optional[Boolean] $newrelic_ini_transaction_tracer_slow_sql             = undef,
+  Optional[String] $newrelic_ini_transaction_tracer_stack_trace_threshold = undef,
+  Optional[String] $newrelic_ini_transaction_tracer_threshold             = undef,
+  Optional[Boolean] $newrelic_ini_capture_params                          = undef,
+  Optional[Boolean] $newrelic_ini_ignored_params                          = undef,
+  String $newrelic_daemon_cfgfile_ensure                                  = 'present',
+  Optional[Integer] $newrelic_daemon_dont_launch                          = undef,
+  Optional[String] $newrelic_daemon_pidfile                               = undef,
+  Optional[String] $newrelic_daemon_location                              = undef,
+  Optional[String] $newrelic_daemon_logfile                               = undef,
+  Optional[String] $newrelic_daemon_loglevel                              = undef,
+  Optional[Variant[String, Integer]] $newrelic_daemon_port                = undef,
+  Optional[Boolean] $newrelic_daemon_ssl                                  = undef,
+  Optional[String] $newrelic_daemon_ssl_ca_bundle                         = undef,
+  Optional[String] $newrelic_daemon_ssl_ca_path                           = undef,
+  Optional[String] $newrelic_daemon_proxy                                 = undef,
+  Optional[String] $newrelic_daemon_collector_host                        = undef,
+  Optional[String] $newrelic_daemon_auditlog                              = undef,
+  Optional[String] $newrelic_php_conf_appname                             = undef,
+  Optional[Boolean] $newrelic_php_conf_enabled                            = undef,
+  Optional[Integer] $newrelic_php_conf_transaction                        = undef,
+  Optional[String] $newrelic_php_conf_logfile                             = undef,
+  Optional[String] $newrelic_php_conf_loglevel                            = undef,
+  Optional[Boolean] $newrelic_php_conf_browser                            = undef,
+  Optional[Boolean] $newrelic_php_conf_dberrors                           = undef,
+  Optional[String] $newrelic_php_conf_transactionrecordsql                = undef,
+  Optional[Boolean] $newrelic_php_conf_captureparams                      = undef,
+  Optional[Boolean] $newrelic_php_conf_ignoredparams                      = undef,
 ) {
-
   include newrelic
-
-  validate_bool($newrelic_php_service_enable)
 
   $newrelic_php_package  = $newrelic::params::newrelic_php_package
   $newrelic_php_service  = $newrelic::params::newrelic_php_service
@@ -103,18 +135,19 @@ define newrelic::php (
   package { $newrelic_php_package:
     ensure  => $newrelic_php_package_ensure,
     require => Class['newrelic::params'],
+    notify  => Service[$newrelic_php_service],
   }
 
   service { $newrelic_php_service:
     ensure     => $newrelic_php_service_ensure,
-    enable     => $newrelic_php_service_enable,
+    enable     => true,
     hasrestart => true,
     hasstatus  => true,
   }
 
   ::newrelic::php::newrelic_ini { $newrelic_php_conf_dir:
     newrelic_license_key => $newrelic_license_key,
-    before               => [ File['/etc/newrelic/newrelic.cfg'], Service[$newrelic_php_service] ],
+    before               => [File['/etc/newrelic/newrelic.cfg'], Service[$newrelic_php_service]],
     require              => Package[$newrelic_php_package],
     notify               => Service[$newrelic_php_service],
   }
@@ -158,5 +191,4 @@ define newrelic::php (
   if $newrelic_php_conf_transaction {
     fail('Variable $newrelic_php_conf_transaction is deprecated, use $newrelic_ini_transaction_tracer_detail instead.')
   }
-
 }

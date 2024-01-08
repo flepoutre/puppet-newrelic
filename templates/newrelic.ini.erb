@@ -1,7 +1,11 @@
 ;
+; Copyright 2020 New Relic Corporation. All rights reserved.
+; SPDX-License-Identifier: Apache-2.0
+;
+
 ; This file contains the various settings for the New Relic PHP agent. There
 ; are many options, all of which are described in detail at the following URL:
-; https://newrelic.com/docs/php/php-agent-phpini-settings
+; https://docs.newrelic.com/docs/agents/php-agent/configuration/php-agent-configuration
 ;
 
 ; If you use a full path to the extension you insulate yourself from the
@@ -11,7 +15,6 @@
 extension = "newrelic.so"
 
 [newrelic]
-;
 ; Setting: newrelic.enabled
 ; Type   : boolean
 ; Scope  : per-directory
@@ -23,11 +26,10 @@ extension = "newrelic.so"
 ;          disable the agent on a per-directory basis.
 ;
 ;newrelic.enabled = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_enabled'] -%>
-newrelic.enabled = <%= scope['::newrelic::agent::php::newrelic_ini_enabled'] %>
+<%- if @newrelic_ini_enabled -%>
+newrelic.enabled = <%= @newrelic_ini_enabled %>
 <%- end -%>
 
-;
 ; Setting: newrelic.license
 ; Type   : string
 ; Scope  : per-directory
@@ -52,22 +54,20 @@ newrelic.enabled = <%= scope['::newrelic::agent::php::newrelic_ini_enabled'] %>
 ;          eliminate the potential for confusion about exactly where the key
 ;          is coming from.
 ;
-newrelic.license = "<%= scope['::newrelic::agent::php::newrelic_license_key'] %>"
+newrelic.license = "<%= @newrelic_license_key %>"
 
-;
 ; Setting: newrelic.logfile
 ; Type   : string
 ; Scope  : system
 ; Default: none
 ; Info   : Sets the name of the file to send log messages to.
 ;
-<%- if scope['::newrelic::agent::php::newrelic_ini_logfile'] -%>
-newrelic.logfile = "<%= scope['::newrelic::agent::php::newrelic_ini_logfile'] %>"
+<%- if @newrelic_ini_logfile -%>
+newrelic.logfile = "<%= @newrelic_ini_logfile %>"
 <%- else -%>
 newrelic.logfile = "/var/log/newrelic/php_agent.log"
 <%- end -%>
 
-;
 ; Setting: newrelic.loglevel
 ; Type   : string
 ; Scope  : system
@@ -79,21 +79,16 @@ newrelic.logfile = "/var/log/newrelic/php_agent.log"
 ;            always, error, warning, info, verbose, debug, verbosedebug
 ;
 ;newrelic.loglevel = "info"
-<%- if scope['::newrelic::agent::php::newrelic_ini_loglevel'] -%>
-newrelic.loglevel = "<%= scope['::newrelic::agent::php::newrelic_ini_loglevel'] %>"
+<%- if @newrelic_ini_loglevel -%>
+newrelic.loglevel = "<%= @newrelic_ini_loglevel %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.high_security
 ; Type   : boolean
 ; Scope  : system
 ; Default: false
-; Info   : Enables high security for all applications.  When high security is
+; Info   : Enables high security for all applications. When high security is
 ;          enabled, the following behavior will take effect:
-;          * Data will not be sent to New Relic unless the newrelic-daemon
-;            is using SSL.  If the PHP process spawns a newrelic-daemon, it
-;            will be configured to use SSL regardless of the value of
-;            ```newrelic.daemon.ssl```.
 ;          * Raw SQL strings will never be gathered, regardless of the value of
 ;            newrelic.transaction_tracer.record_sql.
 ;          * Request parameters will never be captured, regardless of the
@@ -102,17 +97,21 @@ newrelic.loglevel = "<%= scope['::newrelic::agent::php::newrelic_ini_loglevel'] 
 ;            false:
 ;            newrelic_add_custom_parameter
 ;            newrelic_set_user_attributes
+;            newrelic_record_custom_event
 ;
 ;          IMPORTANT:  If you change this setting, you must also change the RPM
-;          UI security setting.  If the two settings do not match, then no data
+;          UI security setting. If the two settings do not match, then no data
 ;          will be collected.
 ;
+;          IMPORTANT: This setting is not compatible with
+;          newrelic.security_policies_token. Only one may be set. If both are
+;          set an error will be thrown and the agent will not connect.
+;
 ;newrelic.high_security = false
-<%- if scope['::newrelic::agent::php::newrelic_ini_high_security'] -%>
-newrelic.high_security = <%= scope['::newrelic::agent::php::newrelic_ini_high_security'] %>
+<%- if @newrelic_ini_high_security -%>
+newrelic.high_security = <%= @newrelic_ini_high_security %>
 <%- end -%>
 
-;
 ; Setting: newrelic.appname
 ; Type   : string
 ; Scope  : per-directory
@@ -124,9 +123,19 @@ newrelic.high_security = <%= scope['::newrelic::agent::php::newrelic_ini_high_se
 ;          for each account / license key.
 ;
 ;newrelic.appname = "PHP Application"
-<%- if scope['::newrelic::agent::php::newrelic_ini_appname'] -%>
-newrelic.appname = "<%= scope['::newrelic::agent::php::newrelic_ini_appname'] %>"
+<%- if @newrelic_ini_appname -%>
+newrelic.appname = "<%= @newrelic_ini_appname %>"
 <%- end -%>
+
+; Setting: newrelic.process_host.display_name
+; Type   : string
+; Scope  : system
+; Default: none
+; Info   : Sets a custom display name for your application server in the New
+;          Relic UI. Servers are normally identified by host and port number.
+;          This setting allows you to give your hosts more recognizable names.
+;
+;newrelic.process_host.display_name = ""
 
 ;
 ; Beginning with version 3.0 of the agent, the daemon can be automatically
@@ -151,20 +160,18 @@ newrelic.appname = "<%= scope['::newrelic::agent::php::newrelic_ini_appname'] %>
 ; except that in this file they are preceded with "newrelic.daemon.".
 ;
 
-;
 ; Setting: newrelic.daemon.logfile
 ; Type   : string
 ; Scope  : system
 ; Default: none
 ; Info   : Sets the name of the file to send daemon log messages to.
 ;
-<%- if scope['::newrelic::agent::php::newrelic_daemon_logfile'] -%>
-newrelic.daemon.logfile = "<%= scope['::newrelic::agent::php::newrelic_daemon_logfile'] %>"
+<%- if @newrelic_daemon_logfile -%>
+newrelic.daemon.logfile = "<%= @newrelic_daemon_logfile %>"
 <%- else -%>
 newrelic.daemon.logfile = "/var/log/newrelic/newrelic-daemon.log"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.loglevel
 ; Type   : string
 ; Scope  : system
@@ -173,80 +180,88 @@ newrelic.daemon.logfile = "/var/log/newrelic/newrelic-daemon.log"
 ;          rarely need to change this from the default, and usually only under
 ;          the guidance of technical support.
 ;          Must be one of the following values:
-;            always, error, warning, info, verbose, debug, verbosedebug
+;            always, error, warning, info, debug
+;
+;          The values verbose and verbosedebug are deprecated aliases for debug.
 ;
 ;newrelic.daemon.loglevel = "info"
-<%- if scope['::newrelic::agent::php::newrelic_daemon_loglevel'] -%>
-newrelic.daemon.loglevel = "<%= scope['::newrelic::agent::php::newrelic_daemon_loglevel'] %>"
+<%- if @newrelic_daemon_loglevel -%>
+newrelic.daemon.loglevel = "<%= @newrelic_daemon_loglevel %>"
 <%- end -%>
 
-;
-; Setting: newrelic.daemon.port
+; Setting: newrelic.daemon.address (alias: newrelic.daemon.port)
 ; Type   : string or integer
 ; Scope  : system
-; Default: /tmp/.newrelic.sock
+; Default: "@newrelic" on Linux, "/tmp/.newrelic.sock" otherwise
 ; Info   : Sets how the agent and daemon communicate. How this is set can impact
-;          performance. The default is to use a UNIX-domain socket located at
-;          /tmp/.newrelic.sock. If you want to use UNIX domain sockets then
-;          this value must begin with a "/". If you set this to an integer
-;          value in the range 1-65534, then this will instruct the agent to
-;          use a normal TCP socket on the port specified. This may be easier
-;          to use if you are using a chroot environment.
+;          performance.
 ;
-;newrelic.daemon.port = "/tmp/.newrelic.sock"
-<%- if scope['::newrelic::agent::php::newrelic_daemon_port'] -%>
-newrelic.daemon.port = "<%= scope['::newrelic::agent::php::newrelic_daemon_port'] %>"
+;          On Linux, the default is to use the abstract socket "@newrelic". An
+;          abstract socket can be created by prefixing the socket name with '@'.
+;
+;          On MacOS and FreeBSD, the default is to use a UNIX-domain socket
+;          located at "/tmp/.newrelic.sock". If you want to use UNIX domain
+;          sockets then this value must begin with a '/'. 
+;
+;          If you set this to an integer value in the range 1-65535, then this
+;          will instruct the agent to use a normal TCP socket on the port 
+;          specified. This may be easier to use if you are using a chroot 
+;          environment.
+;
+;          To connect to a daemon that is running on a different host, set this
+;          value to '<host>:<port>', where '<host>' denotes either a host name
+;          or an IP address and '<port>' denotes a valid port number. IPv6 is
+;          supported.
+;
+;          In order to use a TCP socket with a port in the range 1-1023,
+;          the daemon must be started by the super-user. This is a fundamental
+;          OS limitation and not one imposed by the daemon itself.
+;
+;newrelic.daemon.address = "/tmp/.newrelic.sock"
+<%- if @newrelic_daemon_port -%>
+newrelic.daemon.port = "<%= @newrelic_daemon_port %>"
+<%- end -%>
+<%- if @newrelic_daemon_address -%>
+newrelic.daemon.address = "<%= @newrelic_daemon_address %>"
 <%- end -%>
 
-;
-; Setting: newrelic.daemon.ssl
-; Type   : boolean
-; Scope  : system
-; Default: true (as of version 3.6)
-; Info   : Sets whether or not communication with New Relic data collectors
-;          should use a secure HTTP connection or not.
-;
-;newrelic.daemon.ssl = true
-<%- if scope['::newrelic::agent::php::newrelic_daemon_ssl'] -%>
-newrelic.daemon.ssl = <%= scope['::newrelic::agent::php::newrelic_daemon_ssl'] %>
+<%- if @newrelic_daemon_ssl -%>
+newrelic.daemon.ssl = <%= @newrelic_daemon_ssl %>
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.ssl_ca_bundle
 ; Type   : string
 ; Scope  : system
 ; Default: none
 ; Info   : Sets the location of a file containing CA certificates in PEM
-;          format. When set, the certificates in this file will be used
-;          to authenticate the New Relic collector servers. If
+;          format. When set, the certificates in this file will be used to
+;          authenticate the New Relic collector servers. If
 ;          newrelic.daemon.ssl_ca_path is also set (see below), the
-;          certificates in this file will be searched first, followed by
-;          the certificates contained in the newrelic.daemon.ssl_ca_path
-;          directory. This setting has no effect when newrelic.daemon.ssl
-;          is set to false.
+;          certificates in this file will be searched first, followed by the
+;          certificates contained in the newrelic.daemon.ssl_ca_path
+;          directory.
+;
 ;newrelic.daemon.ssl_ca_bundle = ""
-<%- if scope['::newrelic::agent::php::newrelic_daemon_ssl_ca_bundle'] -%>
-newrelic.daemon.ssl_ca_bundle = "<%= scope['::newrelic::agent::php::newrelic_daemon_ssl_ca_bundle'] %>"
+<%- if @newrelic_daemon_ssl_ca_bundle -%>
+newrelic.daemon.ssl_ca_bundle = "<%= @newrelic_daemon_ssl_ca_bundle %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.ssl_ca_path
 ; Type   : string
 ; Scope  : system
 ; Default: none
-; info   : Sets the location of a directory containing trusted CA certificates
+; Info   : Sets the location of a directory containing trusted CA certificates
 ;          in PEM format. When set, the certificates in this directory will be
 ;          used to authenticate the New Relic collector servers. If
 ;          newrelic.daemon.ssl_ca_bundle is also set (see above), it will be
 ;          searched first followed by the certificates contained in
-;          newrelic.daemon.ssl_ca_path. This setting has no effect when
-;          newrelic.daemon.ssl is set to false.
+;          newrelic.daemon.ssl_ca_path.
+;
 ;newrelic.daemon.ssl_ca_path = ""
-<%- if scope['::newrelic::agent::php::newrelic_daemon_ssl_ca_path'] -%>
-newrelic.daemon.ssl_ca_path = "<%= scope['::newrelic::agent::php::newrelic_daemon_ssl_ca_path'] %>"
+<%- if @newrelic_daemon_ssl_ca_path -%>
+newrelic.daemon.ssl_ca_path = "<%= @newrelic_daemon_ssl_ca_path %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.proxy
 ; Type   : string
 ; Scope  : system
@@ -263,11 +278,10 @@ newrelic.daemon.ssl_ca_path = "<%= scope['::newrelic::agent::php::newrelic_daemo
 ;             user:password@hostname:port
 ;
 ;newrelic.daemon.proxy = ""
-<%- if scope['::newrelic::agent::php::newrelic_daemon_proxy'] -%>
-newrelic.daemon.proxy = "<%= scope['::newrelic::agent::php::newrelic_daemon_proxy'] %>"
+<%- if @newrelic_daemon_proxy -%>
+newrelic.daemon.proxy = "<%= @newrelic_daemon_proxy %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.pidfile
 ; Type   : string
 ; Scope  : system
@@ -277,11 +291,10 @@ newrelic.daemon.proxy = "<%= scope['::newrelic::agent::php::newrelic_daemon_prox
 ;          script to determine whether or not the daemon is already running.
 ;
 ;newrelic.daemon.pidfile = ""
-<%- if scope['::newrelic::agent::php::newrelic_daemon_pidfile'] -%>
-newrelic.daemon.pidfile = "<%= scope['::newrelic::agent::php::newrelic_daemon_pidfile'] %>"
+<%- if @newrelic_daemon_pidfile -%>
+newrelic.daemon.pidfile = "<%= @newrelic_daemon_pidfile %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.location
 ; Type   : string
 ; Scope  : system
@@ -292,15 +305,14 @@ newrelic.daemon.pidfile = "<%= scope['::newrelic::agent::php::newrelic_daemon_pi
 ;          /opt/newrelic/bin/newrelic-daemon.
 ;
 ;newrelic.daemon.location = "/usr/bin/newrelic-daemon"
-<%- if scope['::newrelic::agent::php::newrelic_daemon_location'] -%>
-newrelic.daemon.location = "<%= scope['::newrelic::agent::php::newrelic_daemon_location'] %>"
+<%- if @newrelic_daemon_location -%>
+newrelic.daemon.location = "<%= @newrelic_daemon_location %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.collector_host
 ; Type   : string
 ; Scope  : system
-; Default: collector.newrelic.com
+; Default: none
 ; Info   : Sets the host name of the New Relic data collector host to use.
 ;          Please note that this is NOT any form of local host. It refers to
 ;          the New Relic provided host. There is very little reason to ever
@@ -308,30 +320,11 @@ newrelic.daemon.location = "<%= scope['::newrelic::agent::php::newrelic_daemon_l
 ;          circumstances, and then only on instruction from a New Relic sales
 ;          person or support staff member.
 ;
-;newrelic.daemon.collector_host = "collector.newrelic.com"
-<%- if scope['::newrelic::agent::php::newrelic_daemon_collector_host'] -%>
-newrelic.daemon.collector_host = "<%= scope['::newrelic::agent::php::newrelic_daemon_collector_host'] %>"
+;newrelic.daemon.collector_host = ""
+<%- if @newrelic_daemon_collector_host -%>
+newrelic.daemon.collector_host = "<%= @newrelic_daemon_collector_host %>"
 <%- end -%>
 
-;
-; Setting: newrelic.capture_params
-; Type   : boolean
-; Scope  : per-directory
-; Default: false
-; Info   : Enable or disable the capturing of URL parameters. If enabled, then
-;          any variables passed on the URL like (for example ?id=12345) will be
-;          saved with the request and visible in various places in the web UI.
-;          If you tend to pass sensitive information around directly in the URL
-;          then its a good idea to keep this disabled. However, if your URL
-;          parameters are simply used for parameters without sensitive data but
-;          that are meaningful to each transaction then you can enable this.
-;
-;newrelic.capture_params = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_capture_params'] -%>
-newrelic.capture_params = "<%= scope['::newrelic::agent::php::newrelic_ini_capture_params'] %>"
-<%- end -%>
-
-;
 ; Setting: newrelic.daemon.dont_launch
 ; Type   : integer (0, 1, 2 or 3)
 ; Scope  : system
@@ -346,11 +339,11 @@ newrelic.capture_params = "<%= scope['::newrelic::agent::php::newrelic_ini_captu
 ;          3 - the agent will never start the daemon
 ;
 ;newrelic.daemon.dont_launch = 0
-<%- if scope['::newrelic::agent::php::newrelic_daemon_dont_launch'] -%>
-newrelic.daemon.dont_launch = <%= scope['::newrelic::agent::php::newrelic_daemon_dont_launch'] %>
+<%- if @newrelic_daemon_dont_launch -%>
+newrelic.daemon.dont_launch = <%= @newrelic_daemon_dont_launch %>
 <%- end -%>
 
-;
+
 ; Setting: newrelic.error_collector.enabled
 ; Type   : boolean
 ; Scope  : per-directory
@@ -361,11 +354,11 @@ newrelic.daemon.dont_launch = <%= scope['::newrelic::agent::php::newrelic_daemon
 ;          this to be disabled regardless of any value you set for it.
 ;
 ;newrelic.error_collector.enabled = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_error_collector_enabled'] -%>
-newrelic.error_collector.enabled = <%= scope['::newrelic::agent::php::newrelic_ini_error_collector_enabled'] %>
+<%- unless @newrelic_ini_error_collector_enabled -%>
+newrelic.error_collector.enabled = <%= @newrelic_ini_error_collector_enabled %>
 <%- end -%>
 
-;
+
 ; Setting: newrelic.error_collector.record_database_errors
 ; Type   : boolean
 ; Scope  : per-directory
@@ -377,11 +370,10 @@ newrelic.error_collector.enabled = <%= scope['::newrelic::agent::php::newrelic_i
 ;          above and the account subscription level permits error trapping.
 ;
 ;newrelic.error_collector.record_database_errors = false
-<%- if scope['::newrelic::agent::php::newrelic_ini_error_collector_record_database_errors'] -%>
-newrelic.error_collector.record_database_errors = <%= scope['::newrelic::agent::php::newrelic_ini_error_collector_record_database_errors'] %>
+<%- if @newrelic_ini_error_collector_record_database_errors -%>
+newrelic.error_collector.record_database_errors = <%= @newrelic_ini_error_collector_record_database_errors %>
 <%- end -%>
 
-;
 ; Setting: newrelic.error_collector.prioritize_api_errors
 ; Type   : boolean
 ; Scope  : per-directory
@@ -391,11 +383,10 @@ newrelic.error_collector.record_database_errors = <%= scope['::newrelic::agent::
 ;          priority to such errors.
 ;
 ;newrelic.error_collector.prioritize_api_errors = false
-<%- if scope['::newrelic::agent::php::newrelic_ini_error_collector_prioritize_api_errors'] -%>
-newrelic.error_collector.prioritize_api_errors = <%= scope['::newrelic::agent::php::newrelic_ini_error_collector_prioritize_api_errors'] %>
+<%- if @newrelic_ini_error_collector_prioritize_api_errors -%>
+newrelic.error_collector.prioritize_api_errors = <%= @newrelic_ini_error_collector_prioritize_api_errors %>
 <%- end -%>
 
-;
 ; Setting: newrelic.browser_monitoring.auto_instrument
 ; Type   : boolean
 ; Scope  : per-directory
@@ -405,11 +396,8 @@ newrelic.error_collector.prioritize_api_errors = <%= scope['::newrelic::agent::p
 ;          in HTML output that will time the actual end-user experience.
 ;
 ;newrelic.browser_monitoring.auto_instrument = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_browser_monitoring_auto_instrument'] -%>
-newrelic.browser_monitoring.auto_instrument = <%= scope['::newrelic::agent::php::newrelic_ini_browser_monitoring_auto_instrument'] %>
-<%- end -%>
+newrelic.browser_monitoring.auto_instrument = "<%= @newrelic_ini_browser_monitoring_auto_instrument %>"
 
-;
 ; Setting: newrelic.transaction_tracer.enabled
 ; Type   : boolean
 ; Scope  : per-directory
@@ -424,11 +412,10 @@ newrelic.browser_monitoring.auto_instrument = <%= scope['::newrelic::agent::php:
 ;          regardless of what you set here.
 ;
 ;newrelic.transaction_tracer.enabled = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_enabled'] -%>
-newrelic.transaction_tracer.enabled = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_enabled'] %>
+<%- unless @newrelic_ini_transaction_tracer_enabled -%>
+newrelic.transaction_tracer.enabled = <%= @newrelic_ini_transaction_tracer_enabled %>
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.threshold
 ; Type   : string with a time specification or the word "apdex_f"
 ; Scope  : per-directory
@@ -441,11 +428,10 @@ newrelic.transaction_tracer.enabled = <%= scope['::newrelic::agent::php::newreli
 ;          is the default.
 ;
 ;newrelic.transaction_tracer.threshold = "apdex_f"
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_threshold'] -%>
-newrelic.transaction_tracer.threshold = "<%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_threshold'] %>"
+<%- if @newrelic_ini_transaction_tracer_threshold -%>
+newrelic.transaction_tracer.threshold = "<%= @newrelic_ini_transaction_tracer_threshold %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.detail
 ; Type   : integer in the range 0-1
 ; Scope  : per-directory
@@ -458,11 +444,10 @@ newrelic.transaction_tracer.threshold = "<%= scope['::newrelic::agent::php::newr
 ;          In earlier releases of the agent this was known as "top100".
 ;
 ;newrelic.transaction_tracer.detail = 1
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_detail'] -%>
-newrelic.transaction_tracer.detail = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_detail'] %>
+<%- if @newrelic_ini_transaction_tracer_detail -%>
+newrelic.transaction_tracer.detail = <%= @newrelic_ini_transaction_tracer_detail %>
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.slow_sql
 ; Type   : boolean
 ; Scope  : per-directory
@@ -472,11 +457,10 @@ newrelic.transaction_tracer.detail = <%= scope['::newrelic::agent::php::newrelic
 ;          where the call occurred in your code.
 ;
 ;newrelic.transaction_tracer.slow_sql = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_slow_sql'] -%>
-newrelic.transaction_tracer.slow_sql = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_slow_sql'] %>
+<%- if @newrelic_ini_transaction_tracer_slow_sql -%>
+newrelic.transaction_tracer.slow_sql = <%= @newrelic_ini_transaction_tracer_slow_sql %>
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.stack_trace_threshold
 ; Type   : time specification string ("500ms", "1s750ms" etc)
 ; Scope  : per-directory
@@ -485,25 +469,23 @@ newrelic.transaction_tracer.slow_sql = <%= scope['::newrelic::agent::php::newrel
 ;          stack trace for a transaction trace.
 ;
 ;newrelic.transaction_tracer.stack_trace_threshold = 500
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_stack_trace_threshold'] -%>
-newrelic.transaction_tracer.stack_trace_threshold = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_stack_trace_threshold'] %>
+<%- if @newrelic_ini_transaction_tracer_stack_trace_threshold -%>
+newrelic.transaction_tracer.stack_trace_threshold = <%= @newrelic_ini_transaction_tracer_stack_trace_threshold %>
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.explain_enabled
 ; Type   : boolean
 ; Scope  : per-directory
 ; Default: true
-; Info   : Enables or disables requesting "explain plans" from MySQL and
-;          PostgreSQL databases for slow SQL calls. The threshold for
-;          requesting explain plans is defined below.
+; Info   : Enables or disables requesting "explain plans" from MySQL databases
+;          accessed via MySQLi or PDO_MySQL for slow SQL calls. The threshold
+;          for requesting explain plans is defined below.
 ;
 ;newrelic.transaction_tracer.explain_enabled = true
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_explain_enabled'] -%>
-newrelic.transaction_tracer.explain_enabled = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_explain_enabled'] %>
+<%- if @newrelic_ini_transaction_tracer_explain_enabled -%>
+newrelic.transaction_tracer.explain_enabled = <%= @newrelic_ini_transaction_tracer_explain_enabled %>
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.explain_threshold
 ; Type   : time specification string ("750ms", "1s 500ms" etc)
 ; Scope  : per-directory
@@ -516,24 +498,23 @@ newrelic.transaction_tracer.explain_enabled = <%= scope['::newrelic::agent::php:
 ;          Only relevant if explain_enabled above is set to true.
 ;
 ;newrelic.transaction_tracer.explain_threshold = 500
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_explain_threshold'] -%>
-newrelic.transaction_tracer.explain_threshold = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_explain_threshold'] %>
+<%- if @newrelic_ini_transaction_tracer_explain_threshold -%>
+newrelic.transaction_tracer.explain_threshold = <%= @newrelic_ini_transaction_tracer_explain_threshold %>
 <%- end -%>
 
-;
 ; Setting: newrelic.transaction_tracer.record_sql
 ; Type   : "off", "raw" or "obfuscated"
 ; Scope  : per-directory
 ; Default: "obfuscated"
 ; Info   : Sets how SQL statements are recorded (if at all). If this is set to
-;          "raw" then no attempt is made at obfuscating SQL statements. THIS IS
-;          HIGHLY DISCOURAGED IN PRODUCTION ENVIRONMENTS! Setting this to raw
-;          has considerable security implications as it can expose sensitive
-;          and private customer data.
+;          "raw" then no attempt is made at obfuscating SQL statements.
+;          USING "raw" IS HIGHLY DISCOURAGED IN PRODUCTION ENVIRONMENTS!
+;          Setting this to "raw" has considerable security implications as it
+;          can expose sensitive and private customer data.
 ;
 ;newrelic.transaction_tracer.record_sql = "obfuscated"
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_record_sql'] -%>
-newrelic.transaction_tracer.record_sql = <%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_record_sql'] %>
+<%- if @newrelic_ini_transaction_tracer_record_sql -%>
+newrelic.transaction_tracer.record_sql = <%= @newrelic_ini_transaction_tracer_record_sql %>
 <%- end -%>
 
 ; Setting: newrelic.transaction_tracer.custom
@@ -546,29 +527,33 @@ newrelic.transaction_tracer.record_sql = <%= scope['::newrelic::agent::php::newr
 ;          separated list of function or class method names.
 ;
 ;newrelic.transaction_tracer.custom = ""
-<%- if scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_custom'] -%>
-newrelic.transaction_tracer.custom = "<%= scope['::newrelic::agent::php::newrelic_ini_transaction_tracer_custom'] %>"
+<%- if @newrelic_ini_transaction_tracer_custom -%>
+newrelic.transaction_tracer.custom = "<%= @newrelic_ini_transaction_tracer_custom %>"
 <%- end -%>
 
-;
+
 ; Setting: newrelic.framework
 ; Type   : string
 ; Scope  : per-directory
 ; Default: empty (auto-detect framework)
-; Info   : Forces the framework to be one of the supported frameworks. This
-;          should only ever be used if the auto-detection fails, in which case
-;          we (support.newrelic.com) would very much like to know about the
-;          detection failure. Must be one of the following values:
-;            cakephp, codeigniter, drupal, drupal8, joomla, kohana, laravel, magento,
-;            mediawiki, symfony, wordpress, yii, zend or no_framework.
+; Info   : Disables automatic framework detection, telling the agent to
+;          attempt to name transactions according to the specified framework.
+;          Specifying "no_framework" will disable framework-related transaction
+;          naming entirely. Please let us know at support.newrelic.com if you
+;          encounter a failure with framework autodetection.
+;
+;          Must be one of the following values:
+;          cakephp, codeigniter, drupal, drupal8, joomla, kohana, laravel,
+;          magento, magento2, mediawiki, silex, slim, symfony1, symfony2,
+;          wordpress, yii, zend, zend2, no_framework
+;
 ;          Note that "drupal" covers only Drupal 6 and 7.
 ;
 ;newrelic.framework = ""
-<%- if scope['::newrelic::agent::php::newrelic_ini_framework'] -%>
-newrelic.framework = "<%= scope['::newrelic::agent::php::newrelic_ini_framework'] %>"
+<%- if @newrelic_ini_framework -%>
+newrelic.framework = "<%= @newrelic_ini_framework %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.webtransaction.name.remove_trailing_path
 ; Type   : boolean
 ; Scope  : per-directory
@@ -581,7 +566,6 @@ newrelic.framework = "<%= scope['::newrelic::agent::php::newrelic_ini_framework'
 ;
 ;newrelic.webtransaction.name.remove_trailing_path = false
 
-;
 ; Setting: newrelic.webtransaction.name.functions
 ; Type   : string
 ; Scope  : per-directory
@@ -597,7 +581,6 @@ newrelic.framework = "<%= scope['::newrelic::agent::php::newrelic_ini_framework'
 ;
 ;newrelic.webtransaction.name.functions = ""
 
-;
 ; Setting: newrelic.webtransaction.name.files
 ; Type   : string
 ; Scope  : per-directory
@@ -607,63 +590,66 @@ newrelic.framework = "<%= scope['::newrelic::agent::php::newrelic_ini_framework'
 ;          expressions.
 ;
 ;newrelic.webtransaction.name.files = ""
-<%- if scope['::newrelic::agent::php::newrelic_ini_webtransaction_name_files'] -%>
-newrelic.webtransaction.name.files = "<%= scope['::newrelic::agent::php::newrelic_ini_webtransaction_name_files'] %>"
+<%- if @newrelic_ini_webtransaction_name_files -%>
+newrelic.webtransaction.name.files = "<%= @newrelic_ini_webtransaction_name_files %>"
 <%- end -%>
 
-;
 ; Setting: newrelic.daemon.auditlog
 ; Type   : string
 ; Scope  : system
 ; Default: none
-; info   : Sets the name of a file to record all uncompressed, un-encoded
+; Info   : Sets the name of a file to record all uncompressed, un-encoded
 ;          content that is sent from your machine to the New Relic servers.
 ;          This includes the full URL for each command along with the payload
 ;          delivered with the command. This allows you to satisfy yourself
 ;          that the agent is not sending any sensitive data to our servers.
 ;          This file must be a different file the the newrelic.daemon.logfile
-;          setting above. If you set it to the same name, then audit logging will be
-;          silently ignored.
+;          setting above. If you set it to the same name,
+;          then audit logging will be silently ignored.
+;
 ;newrelic.daemon.auditlog = "/var/log/newrelic/audit.log"
 
-;
 ; Setting: newrelic.transaction_events.enabled
 ; Type   : boolean
 ; Scope  : per-directory
 ; Default: true
-; info   : Collect and report transaction analytics event data.  Event data
+; Info   : Collect and report transaction analytics event data. Event data
 ;          allows the New Relic UI to show additional information such as
-;          histograms.  This setting was formerly called
+;          histograms. This setting was formerly called
 ;          newrelic.analytics_events.enabled.
 ;
 ;newrelic.transaction_events.enabled = true
+<%- unless @newrelic_ini_transaction_events -%>
+newrelic.transaction_events.enabled = <%= @newrelic_ini_transaction_events %>
+<%- end -%>
 
-;
-; Setting: attributes.enabled
+; Setting: newrelic.attributes.enabled
 ; Type   : boolean
 ; Scope  : per-directory
 ; Default: true
-; info   : Enable or disable the collection of attributes generated by the
+; Info   : Enable or disable the collection of attributes generated by the
 ;          agent or generated by the user though newrelic_add_custom_parameter.
 ;          This setting will take precedence over all other attribute
-;          configuration settings.  For more information, please refer to:
-;          https://docs.newrelic.com/docs/subscriptions/agent-attributes
+;          configuration settings. For more information, please refer to:
+;          https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-metrics/agent-attributes
 ;
-;attributes.enabled = true
+;newrelic.attributes.enabled = true
+<%- unless @newrelic_ini_attributes_enabled -%>
+attributes.enabled = <%= @newrelic_ini_attributes_enabled %>
+<%- end -%>
 
-;
 ; Setting: newrelic.transaction_events.attributes.enabled
 ;          newrelic.transaction_tracer.attributes.enabled
 ;          newrelic.error_collector.attributes.enabled
 ;          newrelic.browser_monitoring.attributes.enabled
+;          newrelic.span_events.attributes.enabled
 ; Type   : boolean
 ; Scope  : per-directory
 ; Default: true, except for browser_monitoring.attributes.enabled
-; info   : Control which destinations receive attributes.
+; Info   : Control which destinations receive attributes.
 ;          These configuration settings will override the .include and .exclude
-;          settings below.
-;          For more information, please refer to:
-;          https://docs.newrelic.com/docs/subscriptions/agent-attributes
+;          settings below. For more information, please refer to:
+;          https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-metrics/agent-attributes
 ;
 ;          These settings were formerly called:
 ;          newrelic.transaction_tracer.capture_attributes
@@ -671,13 +657,12 @@ newrelic.webtransaction.name.files = "<%= scope['::newrelic::agent::php::newreli
 ;          newrelic.analytics_events.capture_attributes
 ;          newrelic.browser_monitoring.capture_attributes
 ;
-;
 ;newrelic.transaction_events.attributes.enabled = true
 ;newrelic.transaction_tracer.attributes.enabled = true
 ;newrelic.error_collector.attributes.enabled = true
 ;newrelic.browser_monitoring.attributes.enabled = false
+;newrelic.span_events.attributes.enabled = true
 
-;
 ; Setting: newrelic.attributes.include
 ;          newrelic.attributes.exclude
 ;
@@ -693,12 +678,15 @@ newrelic.webtransaction.name.files = "<%= scope['::newrelic::agent::php::newreli
 ;          newrelic.browser_monitoring.attributes.include
 ;          newrelic.browser_monitoring.attributes.exclude
 ;
+;          newrelic.span_events.attributes.include
+;          newrelic.span_events.attributes.exclude
+;
 ; Type   : string
 ; Scope  : per-directory
 ; Default: none
-; info   : Each attribute has a default set of destinations. For example, the
+; Info   : Each attribute has a default set of destinations. For example, the
 ;          'request_uri' attribute's default destinations are errors and
-;          transaction traces.  The 'httpResponseCode' attribute's default
+;          transaction traces. The 'httpResponseCode' attribute's default
 ;          destinations are errors, transaction traces, and transaction events.
 ;
 ;          These configuration options allow complete control over the
@@ -720,15 +708,18 @@ newrelic.webtransaction.name.files = "<%= scope['::newrelic::agent::php::newreli
 ;          newrelic.attributes.exclude = beta,gamma
 ;
 ;          If one of the values in the comma separated list ends in a '*',
-;          it will match any suffix.  For example, to exclude any attributes
+;          it will match any suffix. For example, to exclude any attributes
 ;          which begin with 'psi', the configuration is:
 ;          newrelic.attributes.exclude = psi*
 ;
 ;          For more information, please refer to:
-;          https://docs.newrelic.com/docs/subscriptions/agent-attributes
+;          https://docs.newrelic.com/docs/agents/manage-apm-agents/agent-metrics/agent-attributes
 ;
 ;newrelic.attributes.include = ""
 ;newrelic.attributes.exclude = ""
+<%- if @newrelic_ini_capture_params -%>
+newrelic.attributes.include = request.parameters.*
+<%- end -%>
 ;
 ;newrelic.transaction_events.attributes.include = ""
 ;newrelic.transaction_events.attributes.exclude = ""
@@ -741,3 +732,404 @@ newrelic.webtransaction.name.files = "<%= scope['::newrelic::agent::php::newreli
 ;
 ;newrelic.browser_monitoring.attributes.include = ""
 ;newrelic.browser_monitoring.attributes.exclude = ""
+;
+;newrelic.span_events.attributes.include = ""
+;newrelic.span_events.attributes.exclude = ""
+<%- if @newrelic_ini_labels -%>
+newrelic.labels = "<%= @newrelic_ini_labels %>"
+<%- end -%>
+
+; Setting: newrelic.feature_flag
+; Type   : string
+; Scope  : system
+; Default: none
+; Info   : Enables new and experimental features within the PHP agent. These
+;          flags are used to selectively enable features that are intended to be
+;          enabled by default in later versions of the PHP agent.
+;
+;newrelic.feature_flag = ""
+
+; Setting: newrelic.custom_insights_events.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables the API function newrelic_record_custom_event.
+;
+;newrelic.custom_insights_events.enabled = true
+
+; Setting: newrelic.labels
+; Type   : string (Use quotes)
+; Scope  : per-directory
+; Default: none
+; Info   : Sets the label names and values to associate with the application.
+;          The list is a semi-colon delimited list of colon-separated name and
+;          value pairs.
+;
+;          There are a maximum of 64 label name/value pairs allowed.
+;
+;          The maximum length of the name and value is 255 characters each.
+;
+;          Leading or trailing whitespace in the name or value will be trimmed.
+;
+;          UTF-8 characters are allowed.
+;
+;          E.g., "Server:One;Data Center:Primary"
+;
+;newrelic.labels = ""
+
+; Setting: newrelic.synthetics.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables support for Synthetics transactions.
+;          For more information, please see:
+;          https://docs.newrelic.com/docs/synthetics/new-relic-synthetics/getting-started/new-relic-synthetics
+;
+;newrelic.synthetics.enabled = true
+
+; Setting: newrelic.cross_application_tracer.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: false
+; Info   : Enables or disables support for Cross Application Tracing, aka "CAT".
+;          NOTE: As of April 2022 CAT has been deprecated and will be removed at a future date.
+;
+;newrelic.cross_application_tracer.enabled = false
+
+; Setting: newrelic.distributed_tracing_enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Distributed tracing lets you see the path that a request takes
+;          through your distributed system. See this guide for more information:
+;          https://docs.newrelic.com/docs/distributed-tracing/concepts/introduction-distributed-tracing
+;          When distributed tracing is enabled it changes the behavior of some
+;          New Relic features. See this guide for details:
+;          https://docs.newrelic.com/docs/transition-guide-distributed-tracing
+;
+;newrelic.distributed_tracing_enabled = true
+<%- if not @newrelic_ini_distributed_tracing_enabled -%>
+newrelic.distributed_tracing_enabled = <%= @newrelic_ini_distributed_tracing_enabled %>
+<%- end -%>
+
+; Setting: newrelic.distributed_tracing_exclude_newrelic_header
+; Type   : boolean
+; Scope  : per-directory
+; Default: false
+; Info   : Set this to true to exclude the New Relic distributed tracing header
+;          that is attached to outbound requests, and to instead only rely on
+;          W3C Trace Context Headers for distributed tracing. If this is false
+;          then both types of headers are attached to outbound requests.
+;
+;          The New Relic distributed tracing header allows interoperability
+;          with older agents that do not support W3C Trace Context headers.
+;          Agent versions that support W3C Trace Context headers will
+;          prioritize them over New Relic headers for distributed tracing.    
+;
+;newrelic.distributed_tracing_exclude_newrelic_header = false
+
+; Setting: newrelic.span_events_enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables the creation of span events. This requires
+;          Distributed Tracing to be enabled.
+;
+;newrelic.span_events_enabled = true
+
+; Setting: newrelic.span_events.max_samples_stored
+; Type   : unsigned integer
+; Scope  : per-directory
+; Default: 2000
+; Info   : The maximum number of span events added to the span event reservoir
+;          per transaction. A value of 0 will use the agent default.  The max
+;          setting is 10000.
+;
+;newrelic.span_events.max_samples_stored = 0
+
+
+; Setting: newrelic.infinite_tracing.trace_observer.host
+; Type   : string
+; Scope  : per-directory
+; Default:
+; Info   : Configures the Trace Observer used for Infinite Tracing. If empty,
+;          Infinite Tracing support will be disabled. This requires Distributed
+;          Tracing and span events to be enabled.
+;
+;newrelic.infinite_tracing.trace_observer.host=
+
+; Setting: newrelic.infinite_tracing.trace_observer.port
+; Type   : integer
+; Scope  : per-directory
+; Default: 443
+; Info   : Configures the port used to communicate with the Infinite Tracing
+;          Trace Observer. This setting is ignored if
+;          newrelic.infinite_tracing.trace_observer.host is empty. This setting
+;          will not usually need to be changed.
+;
+;newrelic.infinite_tracing.trace_observer.port=443
+
+; Setting: newrelic.infinite_tracing.span_events.queue_size
+; Type   : integer (1000 or higher)
+; Scope  : per-directory
+; Default: 100000
+; Info   : Sets the number of span events that can be queued for transmission
+;          to the Infinite Tracing Trace Observer.
+;
+;          The agent internally manages span events for Infinite Tracing in
+;          span batches. Those span batches can hold a maximum of 1000 spans.
+;          Therefore, the span events queue size cannot be lower than 1000, as
+;          otherwise not even a single span batch can be queued. If a queue
+;          size lower than 1000 is specified, the mininum size of 1000 is used.
+;
+;newrelic.infinite_tracing.span_events.queue_size=100000
+
+; Setting: newrelic.transaction_tracer.gather_input_queries
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables support for tracing Doctrine DQL with Slow SQL queries.
+;          This requires Slow SQLs to be enabled.
+;
+;newrelic.transaction_tracer.gather_input_queries = true
+
+; Setting: newrelic.error_collector.capture_events
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables capturing error events, which are displayed as
+;          Error Analytics in the UI.
+;
+;newrelic.error_collector.capture_events = true
+
+; Setting: newrelic.guzzle.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables support for the Guzzle library.
+;
+;newrelic.guzzle.enabled = true
+
+; Setting: newrelic.phpunit_events.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: false
+; Info   : Collect and report PHPUnit (https://phpunit.de/) data as custom
+;          Insights events. Test suite summary data are sent as "TestSuite"
+;          events, while individual test cases are sent as "Test" events.
+;          Depending on your events retention policy, enabling this setting may
+;          impact your billing statement.
+;
+;          Please note that exception messages are collected and sent with
+;          events. Additionally, if you use PHPUnit's --disallow-test-output
+;          flag, any offending output from a risky test will also be included.
+;
+;newrelic.phpunit_events.enabled = false
+
+; Setting: newrelic.datastore_tracer.instance_reporting.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables capturing datastore instance information,
+;          specifically host and port_path_or_id. This information is sent as a
+;          metric and as attributes on transaction traces and slow SQL traces.
+;
+;newrelic.datastore_tracer.instance_reporting.enabled = true
+
+; Setting: newrelic.datastore_tracer.database_name_reporting.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Enables or disables capturing information about database names. This
+;          information is sent as an attribute on transaction traces and slow
+;          SQL traces.
+;
+;newrelic.datastore_tracer.database_name_reporting.enabled = true
+
+; Setting: newrelic.security_policies_token
+; Type   : string
+; Scope  : per-directory
+; Default: none
+; Info   : Enables or disables security policies. If security policies are
+;          enabled on your account, you should paste the security policies token
+;          from the New Relic APM UI here.
+;
+;          IMPORTANT: This setting is not compatible with newrelic.high_security.
+;          Only one may be set. If both are set an error will be thrown and the
+;          agent will not connect.
+;
+;newrelic.security_policies_token = ""
+
+; Setting: newrelic.preload_framework_library_detection
+; Type   : boolean
+; Scope  : system
+; Default: true
+; Info   : Enables detection of frameworks and libraries from opcache.
+;
+;          This only happens when preloading is enabled (when `opcache.preload`
+;          is set).
+;
+;newrelic.preload_framework_library_detection = true
+
+; setting: newrelic.transaction_tracer.max_segments_web
+; type   : integer in the range 0 - 2^31-1
+; scope  : per-directory
+; default: 0
+; info   : Specifies the maximum number of segments the PHP agent shall
+;          record, once that maximum is reached sampling will occur.
+;
+;          The PHP agent reports transaction traces and distributed traces as a
+;          collection of segments.
+;          Each segment represents a method or a function call in a transaction
+;          trace. The default value for this configuration is 0, indicating that
+;          the PHP agent shall capture all segments during a transaction. At the
+;          end of a transaction, it assembles the highest priority segments to
+;          report in a transaction trace.
+;
+;          For long-running PHP processes with hundreds of thousands or millions
+;          of function calls, setting this to a value greater than 1 prevents the
+;          PHP agent from exhausting system memory when recording segments.
+;
+;          Segment size can vary based upon the length of the corresponding
+;          method's name, the length of its class name, and the number of
+;          subsequent calls made by the method. That said, a conservative estimate
+;          is 400 bytes per segment. To limit the PHP agent to 40 mb for segment
+;          capture, set this value to 100000.  If this value is set lower than
+;          2000, it further limits the total number of segments reported for
+;          transaction traces.
+;
+;          This configuration setting is only for PHP web processes; it will not
+;          effect PHP CLI processes. To set a limit for CLI processes use
+;          newrelic.transaction_tracer.max_segments_cli.
+;newrelic.transaction_tracer.max_segments_web = 0
+
+; setting: newrelic.transaction_tracer.max_segments_cli
+; type   : integer in the range 0 - 2^31-1
+; scope  : per-directory
+; default: 100000
+; info   : Specifies the maximum number of segments the PHP agent shall
+;          record, once that maximum is reached sampling will occur.
+;
+;          The PHP agent reports a transaction trace as a collection of segments.
+;          each segment represents a method or a function call in a transaction
+;          trace. The default value for this configuration is 100000. When a value
+;          of less than 1 is set, it will indicate that the PHP agent shall capture
+;          all segments during a transaction. At the end of a transaction, the agent
+;          assembles the highest priority segments to report in a transaction trace.
+;
+;          For long-running PHP processes with hundreds of thousands or millions
+;          of function calls, setting this to a value greater than 1 prevents the
+;          PHP agent from exhausting system memory when recording segments.
+;
+;          Segment size can vary based upon the length of the corresponding
+;          method's name, the length of its class name, and the number of
+;          subsequent calls made by the method. That said, a conservative estimate
+;          is 400 bytes per segment. To limit the PHP agent to 40 mb for segment
+;          capture, set this value to 100000. If this value is set lower than 2000,
+;          it further limits the total number of segments reported for transaction
+;          traces.
+;
+;          This configuration setting is only for PHP CLI processes; it will not
+;          effect PHP web processes. To set a limit for web processes use
+;          newrelic.transaction_tracer.max_segments_web.
+;newrelic.transaction_tracer.max_segments_cli = 100000
+
+; Setting: newrelic.capture_params
+; Info   : This setting has been deprecated.
+;          It was formerly used to capture request parameters.
+;          It has been replaced by the attribute configuration settings.
+;          To replicate this setting with the new settings, one would use:
+;
+;          newrelic.transaction_tracer.attributes.include = request.parameters.*
+;          newrelic.error_collector.attributes.include = request.parameters.*
+;
+;          Please refer to the attribute configuration options for more
+;          information.
+
+; Setting: newrelic.ignored_params
+; Info   : This setting has been deprecated.
+;          It was formerly used to filter request parameters.
+;          It has been replaced by the attribute configuration settings.
+;          If you would like to exclude the request parameter 'alpha', use:
+;
+;          newrelic.attributes.exclude = request.parameters.alpha
+;
+;          Please refer to the attribute configuration options for more
+;          information.
+
+; Setting: newrelic.framework.drupal.modules
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Indicates if Drupal modules, hooks and views are to be instrumented.
+;
+;newrelic.framework.drupal.modules = true
+
+; Setting: newrelic.framework.wordpress.hooks
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Indicates if WordPress hooks are to be instrumented.
+;
+;newrelic.framework.wordpress.hooks = true
+
+; Setting: newrelic.application_logging.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : An overall configuration for enabling/disabling all application
+;          logging features. If this is disabled, all sub-features are disabled;
+;          if it is enabled, the individual sub-feature configurations
+;          take effect.
+;
+;newrelic.application_logging.enabled = true
+
+; Setting: newrelic.application_logging.forwarding.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Toggles whether the agent gathers log records for sending to New Relic.
+;
+;newrelic.application_logging.forwarding.enabled = true
+
+; Setting: newrelic.application_logging.forwarding.max_samples_stored
+; Type   : integer
+; Scope  : per-directory
+; Default: 10000
+; Info   : Number of log records to send per minute to New Relic. Controls the 
+;          overall memory consumption when using log forwarding.
+;
+;newrelic.application_logging.forwarding.max_samples_stored = 10000
+
+; Setting: newrelic.application_logging.forwarding.log_level
+; Type   : string
+; Scope  : per-directory
+; Default: "WARNING"
+; Info   : Sets the minimum log level to be collected when log forwarding
+;          is enabled. 
+;
+;          Based on
+;           https://www.php-fig.org/psr/psr-3/#5-psrlogloglevel
+;           https://datatracker.ietf.org/doc/html/rfc5424
+;
+;          Valid settings (ordered highest to lowest):
+;           "EMERGENCY"
+;           "ALERT"
+;           "CRITICAL"
+;           "ERROR"
+;           "WARNING"
+;           "NOTICE"
+;           "INFO"
+;           "DEBUG"
+;          
+;newrelic.application_logging.forwarding.log_level = "WARNING"
+
+; Setting: newrelic.application_logging.metrics.enabled
+; Type   : boolean
+; Scope  : per-directory
+; Default: true
+; Info   : Toggles whether the agent gathers the Logging/lines and
+;          Logging/lines/{SEVERITY} Logging Metrics used in the Logs chart
+;          on the APM Summary page.
+;
+;newrelic.application_logging.metrics.enabled = true

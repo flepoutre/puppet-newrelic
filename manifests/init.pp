@@ -17,7 +17,5 @@
 # Copyright 2012 Felipe Salum, unless otherwise noted.
 #
 class newrelic {
-
   require newrelic::params
-
 }

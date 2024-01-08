@@ -4,17 +4,22 @@
 #
 # === Parameters
 #
-# [*newrelic_service_enable*]
-#   Specify the service startup state. Defaults to true. Possible value is false.
-#
-# [*newrelic_service_ensure*]
-#   Specify the service running state. Defaults to 'running'. Possible value is 'stopped'.
-#
-# [*newrelic_package_ensure*]
-#   Specify the package update state. Defaults to 'present'. Possible value is 'latest'.
-#
-# [*newrelic_license_key*]
-#   Specify your Newrelic License Key.
+# @param newrelic_package_ensure
+# @param newrelic_service_enable
+# @param newrelic_service_ensure
+# @param newrelic_license_key
+# @param newrelic_package_name
+# @param newrelic_service_name
+# @param newrelic_nrsysmond_loglevel
+# @param newrelic_nrsysmond_logfile
+# @param newrelic_nrsysmond_proxy
+# @param newrelic_nrsysmond_ssl
+# @param newrelic_nrsysmond_ssl_ca_bundle
+# @param newrelic_nrsysmond_ssl_ca_path
+# @param newrelic_nrsysmond_pidfile
+# @param newrelic_nrsysmond_collector_host
+# @param newrelic_nrsysmond_labels
+# @param newrelic_nrsysmond_timeout
 #
 # === Variables
 #
@@ -35,25 +40,23 @@
 # Copyright 2012 Felipe Salum, unless otherwise noted.
 #
 class newrelic::server::linux (
-  $newrelic_package_ensure           = 'present',
-  $newrelic_service_enable           = true,
-  $newrelic_service_ensure           = 'running',
-  $newrelic_license_key              = undef,
-  $newrelic_package_name             = $::newrelic::params::newrelic_package_name,
-  $newrelic_service_name             = $::newrelic::params::newrelic_service_name,
-  $newrelic_nrsysmond_loglevel       = undef,
-  $newrelic_nrsysmond_logfile        = undef,
-  $newrelic_nrsysmond_proxy          = undef,
-  $newrelic_nrsysmond_ssl            = undef,
-  $newrelic_nrsysmond_ssl_ca_bundle  = undef,
-  $newrelic_nrsysmond_ssl_ca_path    = undef,
-  $newrelic_nrsysmond_pidfile        = undef,
-  $newrelic_nrsysmond_collector_host = undef,
-  $newrelic_nrsysmond_labels         = undef,
-  $newrelic_nrsysmond_timeout        = undef,
-  $newrelic_nrsysmond_hostname       = undef,
-) inherits ::newrelic {
-
+  String $newrelic_package_ensure                     = 'present',
+  String $newrelic_service_enable                     = 'true',
+  String $newrelic_service_ensure                     = 'running',
+  Optional[String] $newrelic_license_key              = undef,
+  String $newrelic_package_name                       = $newrelic::params::newrelic_package_name,
+  String $newrelic_service_name                       = $newrelic::params::newrelic_service_name,
+  Optional[String] $newrelic_nrsysmond_loglevel       = undef,
+  Optional[String] $newrelic_nrsysmond_logfile        = undef,
+  Optional[String] $newrelic_nrsysmond_proxy          = undef,
+  Optional[Boolean] $newrelic_nrsysmond_ssl           = undef,
+  Optional[String] $newrelic_nrsysmond_ssl_ca_bundle  = undef,
+  Optional[String] $newrelic_nrsysmond_ssl_ca_path    = undef,
+  Optional[String] $newrelic_nrsysmond_pidfile        = undef,
+  Optional[String] $newrelic_nrsysmond_collector_host = undef,
+  Optional[String] $newrelic_nrsysmond_labels         = undef,
+  Optional[Integer] $newrelic_nrsysmond_timeout       = undef,
+) inherits newrelic {
   if ! $newrelic_license_key {
     fail('You must specify a valid License Key.')
   }
@@ -79,7 +82,7 @@ class newrelic::server::linux (
   }
 
   file { '/etc/newrelic/nrsysmond.cfg':
-    ensure  => present,
+    ensure  => file,
     path    => '/etc/newrelic/nrsysmond.cfg',
     content => template('newrelic/nrsysmond.cfg.erb'),
     require => Package[$newrelic_package_name],
@@ -104,5 +107,4 @@ class newrelic::server::linux (
     require => Package[$newrelic_package_name],
     notify  => Service[$newrelic_service_name],
   }
-
 }
